@@ -78,13 +78,13 @@ pub fn encode(n: u128) -> String {
     res.into_iter().collect()
 }
 
-pub fn decode(s: &str) -> u128 {
+pub fn decode(s: &str) -> Result<u128, char> {
     let mut n: u128 = 0;
     for c in s.chars() {
         n *= 62;
-        n += CHAR_TO_INDEX[&c] as u128;
+        n += CHAR_TO_INDEX.get(&c).copied().ok_or(c)? as u128;
     }
-    n
+    Ok(n)
 }
 
 #[cfg(test)]
@@ -215,14 +215,14 @@ mod tests {
             500000000000000000000,
         ] {
             let s = super::encode(n);
-            let n2 = super::decode(&s);
+            let n2 = super::decode(&s).unwrap();
             assert_eq!(n, n2);
         }
 
         for _ in 0..100 {
             let n = uuid::Uuid::new_v4().as_u128();
             let s = super::encode(n);
-            let n2 = super::decode(&s);
+            let n2 = super::decode(&s).unwrap();
             // println!("n: {}, s: {} n2: {}", n, s, n2);
             assert_eq!(n, n2);
         }
@@ -231,8 +231,8 @@ mod tests {
             let id: uuid::Uuid = ulid::Ulid::new().into();
             let n = id.as_u128();
             let s = super::encode(n);
-            let n2 = super::decode(&s);
-             println!("n: {}, s: {} n2: {}", n, s, n2);
+            let n2 = super::decode(&s).unwrap();
+            println!("n: {}, s: {} n2: {}", n, s, n2);
             assert_eq!(n, n2);
         }
     }
